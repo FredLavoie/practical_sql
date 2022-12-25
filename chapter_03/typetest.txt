@@ -1,0 +1,9 @@
+varchar_column|char_column|test_column
+abc|abc       |abc
+defghi|defghi    |defghi
+abc|abc       |abc
+defghi|defghi    |defghi
+abc|abc       |abc
+defghi|defghi    |defghi
+abc|abc       |abc
+defghi|defghi    |defghi
