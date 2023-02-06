@@ -118,8 +118,8 @@ CREATE TABLE us_counties_2000 (
     p0020003 integer                   -- Not Hispanic or Latino:
 );
 
-COPY us_counties_2000
-FROM 'C:\YourDirectory\us_counties_2000.csv'
+\COPY us_counties_2000
+FROM '/Users/fredericlavoie/dev/practical_sql/us_counties_2000.csv'
 WITH (FORMAT CSV, HEADER);
 
 SELECT c2010.geo_name,
