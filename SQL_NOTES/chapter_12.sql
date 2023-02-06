@@ -1,48 +1,80 @@
 
 
-
-CREATE TABLE new_york_addresses (
-    longitude numeric(9,6),
-    latitude numeric(9,6),
-    street_number varchar(10),
-    street varchar(32),
-    unit varchar(7),
-    postcode varchar(5),
-    id integer CONSTRAINT new_york_key PRIMARY KEY
-);
-
-\COPY new_york_addresses
-FROM '/Users/fredericlavoie/dev/practical_sql/city_of_new_york.csv'
-WITH (FORMAT CSV, HEADER);
+-- List 12-4
+SELECT census.state_us_abbreviation AS st,
+       census.st_population,
+       plants.plant_count,
+       round((plants.plant_count/census.st_population::numeric(10,1)) * 1000000, 1)
+           AS plants_per_million
+FROM
+    (
+         SELECT st,
+                count(*) AS plant_count
+         FROM meat_poultry_egg_inspect
+         GROUP BY st
+    )
+    AS plants
+JOIN
+    (
+        SELECT state_us_abbreviation,
+               sum(p0010001) AS st_population
+        FROM us_counties_2010
+        GROUP BY state_us_abbreviation
+    )
+    AS census
+ON plants.st = census.state_us_abbreviation
+ORDER BY plants_per_million DESC;
 
 
 
 
 -- ************************************************************************************************************************
--- Indexes
+-- Common Table Expressions (CTE)
 
 -- Definition:
--- Like an index in a book, a table index helps find data in a table with a direct adress to the data
--- rather than searching through the table one row at a time
+-- Create temporary tables for querying.
+-- Relatively new addition to the SQL standard.
+-- informally called a "WITH clause"
 
--- To benchmark a query, use the EXPLAIN command in PostgreSQL
-EXPLAIN ANALYZE SELECT * FROM new_york_addresses
-WHERE street = 'BROADWAY';
--- Execution Time: 36.574 ms
--- Execution Time: 4.845 ms (with index)
+WITH
+--  Temp Table Name (column names)
+    large_counties (geo_name, st, p0010001)
+AS
+    (
+        -- column names map to temp table column names
+        SELECT geo_name, state_us_abbreviation, p0010001
+        FROM us_counties_2010
+        WHERE p0010001 >= 100000
+    )
+SELECT st, count(*)
+FROM large_counties
+GROUP BY st
+ORDER BY count(*) DESC;
 
-EXPLAIN ANALYZE SELECT * FROM new_york_addresses
-WHERE street = '52 STREET';
--- Execution Time: 38.185 ms
--- Execution Time: 2.324 ms (with index)
+-- The above query is the same as the following query
+SELECT state_us_abbreviation AS st, count(*)
+FROM us_counties_2010
+WHERE p0010001 >= 100000
+GROUP BY st
+ORDER BY count(*) DESC;
 
-EXPLAIN ANALYZE SELECT * FROM new_york_addresses
-WHERE street = 'ZWICKY AVENUE';
--- Execution Time: 37.221 ms
--- Execution Time: 0.325 ms (with index)
+-- Listing 12-8
+-- A query using CTE which is an alternative method of writting the List 12-4
+WITH
+    counties (st, population) AS
+    (SELECT state_us_abbreviation, sum(population_count_100_percent)
+     FROM us_counties_2010
+     GROUP BY state_us_abbreviation),
 
--- Create an index for the street names
-CREATE INDEX street_idx ON new_york_addresses (street);
+    plants (st, plants) AS
+    (SELECT st, count(*) AS plants
+     FROM meat_poultry_egg_inspect
+     GROUP BY st)
 
--- To drop/delete an index
-DROP INDEX street_idx
+SELECT counties.st,
+       population,
+       plants,
+       round((plants/population::numeric(10,1))*1000000, 1) AS per_million
+FROM counties JOIN plants
+ON counties.st = plants.st
+ORDER BY per_million DESC;
