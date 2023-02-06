@@ -92,8 +92,8 @@ CREATE TABLE us_counties_2010 (
   h0010003 integer
 );
 
-COPY us_counties_2010
-FROM '/Users/fredericlavoie/Documents/practical_sql/us_counties_2010.csv'
+\COPY us_counties_2010
+FROM '/Users/fredericlavoie/dev/practical_sql/us_counties_2010.csv'
 WITH (FORMAT CSV, HEADER);
 
 SELECT geo_name, state_us_abbreviation, area_land

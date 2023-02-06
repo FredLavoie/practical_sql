@@ -10,7 +10,7 @@ VALUES
 	('defghi', 'defghi', 'defghi');
 
 
-/* The COPY command needs to be \copy in psql */
+-- The COPY command needs to be \copy in psql
 COPY char_data_types TO '/Users/fredericlavoie/Documents/practical_sql/chapter_03/typetest.csv'
 WITH (FORMAT CSV, HEADER, DELIMITER '|');
 
